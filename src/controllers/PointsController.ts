@@ -1,5 +1,9 @@
 import {Request, Response, query} from 'express';
 import knex from '../database/connection';
+// interface pointItemData{
+//   item_id: number,
+//   point_id: number
+// }
 
 class PointsController {
   async index(request: Request, response: Response){
@@ -73,6 +77,7 @@ class PointsController {
       city, 
       uf
     };
+    console.log(point)
     
     const insertedIds = await trx('points').insert(point).returning('id');
   
@@ -82,15 +87,24 @@ class PointsController {
       .split(',')
       .map((item: string) => Number(item.trim()))
       .map((item_id: number) => {
+        console.log(typeof(item_id), item_id)
       return {
-        item_id,
         point_id,
+        item_id,
       };
     })
+    // console.log("pointItems", pointItems)
+    // const pointItem = pointItems.map(async(pointItem:Object) => {
+    //   console.log("pointItem", pointItem)
+    //   await trx('point_items').insert(pointItem).returning('id');
+    //   return pointItem
+    // })
+    
   
     await trx('point_items').insert(pointItems).returning('id');
 
     await trx.commit();
+
 
     return response.json({
       id: point_id,
