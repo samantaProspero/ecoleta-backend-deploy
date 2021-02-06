@@ -51,56 +51,61 @@ class PointsController {
   }
 
   async create(request: Request, response: Response) {
-    const {
-      name, 
-      email, 
-      whatsapp,
-      latitude,
-      longitude,
-      city, 
-      uf, 
-      items
-    } = request.body;
-  
-    const trx = await knex.transaction();
-
-    const result = await cloudinary.uploader.upload(request.file.path);
-    const {secure_url}  = result
-
-
-    const point = {
-      image: secure_url,
-      name, 
-      email, 
-      whatsapp,
-      latitude,
-      longitude,
-      city: city || 'São Paulo', 
-      uf: uf || 'SP'
-    };
+    try {
+      const {
+        name, 
+        email, 
+        whatsapp,
+        latitude,
+        longitude,
+        city, 
+        uf, 
+        items
+      } = request.body;
     
-    const insertedIds = await trx('points').insert(point).returning('id');
+      const trx = await knex.transaction();
   
-    const point_id = insertedIds[0];
-    const pointItems = items
-      .split(',')
-      .map((item: string) => Number(item.trim()))
-      .map((item_id: number) => {
-      return {
-        point_id,
-        item_id,
+      const result = await cloudinary.uploader.upload(request.file.path);
+      const {secure_url}  = result
+  
+  
+      const point = {
+        image: secure_url,
+        name, 
+        email, 
+        whatsapp,
+        latitude,
+        longitude,
+        city, 
+        uf
       };
-    })
+      
+      const insertedIds = await trx('points').insert(point).returning('id');
+    
+      const point_id = insertedIds[0];
+      const pointItems = items
+        .split(',')
+        .map((item: string) => Number(item.trim()))
+        .map((item_id: number) => {
+        return {
+          point_id,
+          item_id,
+        };
+      })
+    
+      await trx('point_items').insert(pointItems).returning('id');
   
-    await trx('point_items').insert(pointItems).returning('id');
-
-    await trx.commit();
-
-
-    return response.json({
-      id: point_id,
-      ...point, 
-    });
+      await trx.commit();
+  
+  
+      return response.json({
+        id: point_id,
+        ...point, 
+      });
+    } catch (error) {
+      console.error(error);
+    }
+    
   }
 }
 
