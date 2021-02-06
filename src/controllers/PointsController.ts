@@ -75,8 +75,8 @@ class PointsController {
       whatsapp,
       latitude,
       longitude,
-      city, 
-      uf
+      city: city || 'São Paulo', 
+      uf: uf || 'SP'
     };
     
     const insertedIds = await trx('points').insert(point).returning('id');
